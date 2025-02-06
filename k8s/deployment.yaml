@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    name: goserver
+spec:
+  replicas: 10
+  selector:
+    matchLabels:
+      app: server
+  template:
+    metadata:
+      labels:
+        app: server
+    spec:
+      containers:
+        - name: goserver
+          image: rdastry29/golang:v2
+          ports:
+            - containerPort: 3000
+          resources:
+            limits:
+              memory: 256Mi
+              cpu: "500m"
+            requests:
+              memory: 128Mi
+              cpu: "250m"
+          volumeMounts:
+            - mountPath: git-ssh-key
+              name: /home/rdantas/.ssh
+              readOnly: true
+      volumes:
+        - name: git-ssh-key
+          secret:
+            secretName: git-ssh-key
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: goserver-service
+spec:
+  type: LoadBalancer
+  ports:
+    - protocol: TCP
+      name: http-svc
+      port: 3000
+  selector:
+    app: server
